@@ -1,98 +1,291 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import {
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const SFU_RED = '#C8102E';
+
+// ---- Icons (simple SVG-like emoji stand-ins drawn with pure RN) ----
+// We'll use simple unicode/emoji icons inside colored circle badges.
+
+interface FeatureCardProps {
+  title: string;
+  subtitle: string;
+  icon: string;
+  bgColor: string;
+  iconBg: string;
+  textColor?: string;
+  subtitleColor?: string;
+  flex?: number;
+  onPress?: () => void;
+}
+
+function FeatureCard({
+  title,
+  subtitle,
+  icon,
+  bgColor,
+  iconBg,
+  textColor = '#fff',
+  subtitleColor,
+  flex = 1,
+  onPress,
+}: FeatureCardProps) {
+  return (
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: bgColor, flex }]}
+      onPress={onPress}
+      activeOpacity={0.82}
+    >
+      {/* Arrow */}
+      <Text style={[styles.cardArrow, { color: textColor }]}>↗</Text>
+
+      {/* Icon badge */}
+      <View style={[styles.iconBadge, { backgroundColor: iconBg }]}>
+        <Text style={styles.iconText}>{icon}</Text>
+      </View>
+
+      {/* Text */}
+      <Text style={[styles.cardTitle, { color: textColor }]}>{title}</Text>
+      <Text style={[styles.cardSubtitle, { color: subtitleColor ?? (textColor === '#fff' ? 'rgba(255,255,255,0.7)' : '#888') }]}>
+        {subtitle}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+interface WideCardProps {
+  title: string;
+  subtitle: string;
+  icon: string;
+  bgColor: string;
+  iconBg: string;
+  textColor?: string;
+  subtitleColor?: string;
+  onPress?: () => void;
+}
+
+function WideCard({
+  title,
+  subtitle,
+  icon,
+  bgColor,
+  iconBg,
+  textColor = '#1a1a1a',
+  subtitleColor = '#666',
+  onPress,
+}: WideCardProps) {
+  return (
+    <TouchableOpacity
+      style={[styles.wideCard, { backgroundColor: bgColor }]}
+      onPress={onPress}
+      activeOpacity={0.82}
+    >
+      {/* Icon badge */}
+      <View style={[styles.wideIconBadge, { backgroundColor: iconBg }]}>
+        <Text style={styles.wideIconText}>{icon}</Text>
+      </View>
+
+      {/* Text */}
+      <View style={styles.wideTextBlock}>
+        <Text style={[styles.wideTitle, { color: textColor }]}>{title}</Text>
+        <Text style={[styles.wideSubtitle, { color: subtitleColor }]}>{subtitle}</Text>
+      </View>
+
+      {/* Arrow */}
+      <Text style={[styles.wideArrow, { color: textColor === '#fff' ? 'rgba(255,255,255,0.6)' : '#aaa' }]}>↗</Text>
+    </TouchableOpacity>
+  );
+}
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const handleAcademicAdvisor = () => {
+    // TODO: navigate to Academic Advisor screen
+    console.log('Academic Advisor pressed');
+  };
+
+  const handleCoursesProfs = () => {
+    // TODO: navigate to Courses & Profs screen
+    console.log('Courses & Profs pressed');
+  };
+
+  const handleMap = () => {
+    // TODO: navigate to Map screen
+    console.log('Map pressed');
+  };
+
+  const handleChatbot = () => {
+    router.push('/chatbot');
+  };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerText}>
+            Discover <Text style={styles.headerRed}>ASKSFU</Text>
+          </Text>
+        </View>
+
+        {/* Top row: 2 square cards */}
+        <View style={styles.row}>
+          <FeatureCard
+            title={'Academic\nAdvisor'}
+            subtitle={'Get degree planning &\ngraduation help'}
+            icon="🎓"
+            bgColor={SFU_RED}
+            iconBg="rgba(255,255,255,0.2)"
+            onPress={handleAcademicAdvisor}
+          />
+          <View style={styles.rowGap} />
+          <FeatureCard
+            title={'Courses &\nProfs'}
+            subtitle={'Faculty insights\n& degree requirements'}
+            icon="📖"
+            bgColor="#2C2C2C"
+            iconBg="rgba(255,255,255,0.12)"
+            onPress={handleCoursesProfs}
+          />
+        </View>
+
+        {/* Map — wide light card */}
+        <WideCard
+          title="Map"
+          subtitle="Find your way to class"
+          icon="📍"
+          bgColor="#F0F0F0"
+          iconBg="rgba(200,16,46,0.12)"
+          textColor="#1a1a1a"
+          subtitleColor="#666"
+          onPress={handleMap}
+        />
+
+        {/* Chatbot — wide dark card */}
+        <WideCard
+          title="SFU AI Chatbot"
+          subtitle="Your intelligent university companion"
+          icon="💬"
+          bgColor="#1E1E1E"
+          iconBg={SFU_RED}
+          textColor="#fff"
+          subtitleColor="rgba(255,255,255,0.55)"
+          onPress={handleChatbot}
+        />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
   },
-  stepContainer: {
-    gap: 8,
+  scroll: {
+    paddingTop: 64,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  header: {
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  headerText: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#1a1a1a',
+    letterSpacing: 0.3,
+  },
+  headerRed: {
+    color: SFU_RED,
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  rowGap: {
+    width: 14,
+  },
+  // Square cards
+  card: {
+    borderRadius: 20,
+    padding: 18,
+    minHeight: 190,
+    justifyContent: 'flex-end',
+    position: 'relative',
+  },
+  cardArrow: {
     position: 'absolute',
+    top: 14,
+    right: 16,
+    fontSize: 16,
+    opacity: 0.6,
+  },
+  iconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  iconText: {
+    fontSize: 22,
+  },
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  // Wide cards
+  wideCard: {
+    borderRadius: 20,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  wideIconBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  wideIconText: {
+    fontSize: 24,
+  },
+  wideTextBlock: {
+    flex: 1,
+  },
+  wideTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 3,
+  },
+  wideSubtitle: {
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  wideArrow: {
+    fontSize: 16,
+    alignSelf: 'flex-start',
   },
 });
