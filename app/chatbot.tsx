@@ -21,30 +21,54 @@ import {
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
+import { API_CONFIG } from '../constants/api';
 
 const SFU_RED = '#C8102E';
 const NAV_BG = '#54585A';
 const { height: SCREEN_H } = Dimensions.get('window');
 
-// ─── Stub AI function ─────────────────────────────────────────────────────────
+// ─── AI Backend Integration ──────────────────────────────────────────────────
 async function getAIResponse(userMessage: string, imageUri?: string): Promise<string> {
-  // TODO: Connect this to manish back end
-  await new Promise(r => setTimeout(r, 1200));
+  try {
+    // Determine the correct base URL based on platform
+    let baseUrl = API_CONFIG.BASE_URL;
+    
+    // For Android emulator, use special IP
+    if (Platform.OS === 'android' && __DEV__) {
+      baseUrl = API_CONFIG.ANDROID_EMULATOR_URL;
+    }
 
-  if (imageUri) {
-    return 'I see you attached an image! Currently analyzing this document using our vision models...';
+    // TODO: Image upload support can be added later
+    if (imageUri) {
+      return 'Image analysis is coming soon! For now, please describe what you need help with.';
+    }
+
+    // Call the backend API
+    const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CHAT}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: userMessage,
+        sessionId: `mobile-${Date.now()}`, // Simple session ID
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.response || "I couldn't get a response. Please try again.";
+    
+  } catch (error) {
+    console.error('Backend API Error:', error);
+    
+    // Fallback response if backend is unavailable
+    return "I'm having trouble connecting to the server. Please make sure the backend is running on your computer. " +
+           "If you're testing on a physical device, update the IP address in constants/api.ts to your computer's local IP address.";
   }
-
-  const lower = userMessage.toLowerCase();
-  if (lower.includes('course') || lower.includes('cmpt') || lower.includes('class'))
-    return 'SFU offers a wide range of courses across all faculties. You can browse the full catalogue at sfu.ca/students/calendar. Need help finding a specific course?';
-  if (lower.includes('prof') || lower.includes('teacher') || lower.includes('instructor'))
-    return 'Professor ratings can be found on Rate My Professor and through SFU\'s course evaluation system. Which department are you curious about?';
-  if (lower.includes('map') || lower.includes('building') || lower.includes('room') || lower.includes('where'))
-    return 'SFU\'s main Burnaby campus is on Burnaby Mountain. Key buildings include the AQ, WMC, and SSB. Which building are you trying to find?';
-  if (lower.includes('advis'))
-    return 'Academic advising is handled per department. You can book through the SFU advising portal or attend drop-in hours.';
-  return "That's a great question! I can help with course info, professor reviews, campus locations, advising, clubs, and more. What would you like to know?";
 }
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
