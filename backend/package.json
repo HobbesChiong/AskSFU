@@ -1,0 +1,25 @@
+{
+  "name": "sfu-ai-chatbot",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@langchain/community": "^0.3.31",
+    "@langchain/core": "^0.3.40",
+    "@langchain/openai": "^0.4.4",
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.1.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
+    "langchain": "^0.3.18",
+    "openai": "^4.85.1",
+    "puppeteer": "^24.4.0",
+    "ws": "^8.18.3"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}

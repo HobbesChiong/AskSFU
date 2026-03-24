@@ -1,0 +1,35 @@
+# Environment variables
+.env
+
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Frontend files (if separating backend)
+*.html
+*.css
+script.js
+particles.js
+theme.js
+electric-border.js
+search-bar-electric.js
+simple-electric-border.js
+simple-particles.js
+working-particles.js
+react-particles.jsx
+assets/
+*.png
+*.gif
+*.jpg
+*.jpeg
