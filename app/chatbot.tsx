@@ -7,6 +7,7 @@ import {
   Easing,
   FlatList,
   Image,
+  Linking,
   Modal,
   Platform,
   SafeAreaView,
@@ -28,7 +29,7 @@ const NAV_BG = '#54585A';
 const { height: SCREEN_H } = Dimensions.get('window');
 
 // ─── AI Backend Integration ──────────────────────────────────────────────────
-async function getAIResponse(userMessage: string, imageUri?: string): Promise<string> {
+async function getAIResponse(userMessage: string, imageUri?: string, imageBase64?: string): Promise<string> {
   try {
     // Determine the correct base URL based on platform
     let baseUrl = API_CONFIG.BASE_URL;
@@ -38,9 +39,14 @@ async function getAIResponse(userMessage: string, imageUri?: string): Promise<st
       baseUrl = API_CONFIG.ANDROID_EMULATOR_URL;
     }
 
-    // TODO: Image upload support can be added later
-    if (imageUri) {
-      return 'Image analysis is coming soon! For now, please describe what you need help with.';
+    // Prepare payload
+    const payload: any = {
+      message: userMessage,
+      sessionId: `mobile-${Date.now()}`, // Simple session ID
+    };
+
+    if (imageBase64) {
+      payload.image = `data:image/jpeg;base64,${imageBase64}`;
     }
 
     // Call the backend API
@@ -49,10 +55,7 @@ async function getAIResponse(userMessage: string, imageUri?: string): Promise<st
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        message: userMessage,
-        sessionId: `mobile-${Date.now()}`, // Simple session ID
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -147,6 +150,28 @@ function SFUWatermark() {
 // ─── Message bubble ───────────────────────────────────────────────────────────
 function MessageBubble({ message }: { message: Message }) {
   const isUser = message.sender === 'user';
+  
+  const renderTextWithLinks = (text: string) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <Text
+            key={index}
+            style={{ color: '#0066CC', textDecorationLine: 'underline' }}
+            onPress={() => Linking.openURL(part)}
+          >
+            {part}
+          </Text>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <View style={[styles.bubbleRow, isUser ? styles.bubbleRowUser : styles.bubbleRowAI]}>
       <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAI]}>
@@ -160,7 +185,7 @@ function MessageBubble({ message }: { message: Message }) {
         )}
         {message.text ? (
           <Text style={[styles.bubbleText, isUser ? styles.bubbleTextUser : styles.bubbleTextAI]}>
-            {message.text}
+            {renderTextWithLinks(message.text)}
           </Text>
         ) : null}
       </View>
@@ -200,7 +225,7 @@ function UploadSheet({
 }: {
   visible: boolean;
   onClose: () => void;
-  onImageSelected: (uri: string) => void;
+  onImageSelected: (uri: string, base64?: string) => void;
 }) {
   const slideAnim = useRef(new Animated.Value(SCREEN_H)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -258,9 +283,10 @@ function UploadSheet({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
       quality: 1,
+      base64: true,
     });
     if (!result.canceled) {
-      onImageSelected(result.assets[0].uri); // pass URI up to parent
+      onImageSelected(result.assets[0].uri, result.assets[0].base64 || undefined); // pass URI and base64 up to parent
       onClose();
     }
   };
@@ -370,6 +396,7 @@ export default function ChatbotScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadVisible, setUploadVisible] = useState(false);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [attachedBase64, setAttachedBase64] = useState<string | null>(null);
   const flatRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -390,10 +417,12 @@ export default function ChatbotScreen() {
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setAttachedImage(null);
+    const base64ToSend = attachedBase64;
+    setAttachedBase64(null);
     setIsLoading(true);
     try {
-      // Pass the text and the attached image URI to the AI API
-      const aiText = await getAIResponse(text, attachedImage ?? undefined);
+      // Pass the text and the attached image URI and base64 to the AI API
+      const aiText = await getAIResponse(text, attachedImage ?? undefined, base64ToSend ?? undefined);
       setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'ai', text: aiText }]);
     } catch {
       setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'ai', text: "Sorry, I'm having trouble connecting. Please try again." }]);
@@ -460,7 +489,10 @@ export default function ChatbotScreen() {
                     />
                     <TouchableOpacity
                       style={styles.attachPreviewRemove}
-                      onPress={() => setAttachedImage(null)}
+                      onPress={() => {
+                        setAttachedImage(null);
+                        setAttachedBase64(null);
+                      }}
                       hitSlop={6}
                     >
                       <Text style={styles.attachPreviewRemoveText}>✕</Text>
@@ -502,7 +534,10 @@ export default function ChatbotScreen() {
       <UploadSheet
         visible={uploadVisible}
         onClose={() => setUploadVisible(false)}
-        onImageSelected={(uri) => setAttachedImage(uri)}
+        onImageSelected={(uri, base64) => {
+          setAttachedImage(uri);
+          if (base64) setAttachedBase64(base64);
+        }}
       />
     </SafeAreaView>
   );

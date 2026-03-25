@@ -197,7 +197,8 @@ dotenv.config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static files from the current directory
 app.use(express.static("."));
@@ -1034,13 +1035,13 @@ async function handleStreamingChat(ws, message, sessionId) {
       let response;
       
       if (wantsAllClubs) {
-        const allClubsList = SFU_CLUBS.join("<br>- ");
-        response = `✅ Here is the complete list of all ${SFU_CLUBS.length} clubs at SFU:<br>- ${allClubsList}<br><br>🔗 For more details, visit <a href="https://go.sfss.ca/clubs/list.php" target="_blank">SFU Club List</a>`;
+        const allClubsList = SFU_CLUBS.join("\n- ");
+        response = `Here is the complete list of all ${SFU_CLUBS.length} clubs at SFU:\n- ${allClubsList}\n\nFor more details, visit: https://go.sfss.ca/clubs/list.php`;
       } else if (matched.length > 0) {
         const limit = matched.length > 10 ? 10 : matched.length; // Show up to 10 clubs
-        response = `✅ Here are some SFU clubs related to "${message}":<br>- ${matched.slice(0, limit).join("<br>- ")}<br><br>🔗 Explore more at <a href="https://go.sfss.ca/clubs/list.php" target="_blank">SFU Club List</a>`;
+        response = `Here are some SFU clubs related to "${message}":\n- ${matched.slice(0, limit).join("\n- ")}\n\nExplore more at: https://go.sfss.ca/clubs/list.php`;
       } else {
-        response = `❌ Couldn't find a club match for "${message}".<br><br>🔗 Check all clubs at <a href="https://go.sfss.ca/clubs/list.php" target="_blank">SFU Club List</a>`;
+        response = `Couldn't find a club match for "${message}".\n\nCheck all clubs at: https://go.sfss.ca/clubs/list.php`;
       }
       addToHistory(sessionId, "assistant", response);
       ws.send(JSON.stringify({ type: 'typing', isTyping: false }));
@@ -1092,8 +1093,8 @@ async function handleStreamingChat(ws, message, sessionId) {
         await handleStreamingFallbackLLM(ws, message, sessionId);
         return;
       }
-      const sectionList = sections.map(sec => `${sec.text} - ${sec.title}`).join("<br>");
-      const response = `Here are the available sections for ${department} ${courseNumber} (${term} ${year}):<br>${sectionList}<br><br>Please type the section code (e.g., D100) to get the course outline.`;
+      const sectionList = sections.map(sec => `${sec.text} - ${sec.title}`).join("\n");
+      const response = `Here are the available sections for ${department} ${courseNumber} (${term} ${year}):\n${sectionList}\n\nPlease type the section code (e.g., D100) to get the course outline.`;
       addToHistory(sessionId, "assistant", response);
       ws.send(JSON.stringify({ type: 'typing', isTyping: false }));
       ws.send(JSON.stringify({ type: 'message', content: response }));
@@ -1134,7 +1135,7 @@ async function handleStreamingLLM(ws, message, sessionId) {
     if (docs.length > 0 && docs[0][1] > 0.75) {
       console.log("Using vector store docs for streaming response");
       const result = await retrievalChain.invoke({ input: enhancedPrompt });
-      const responseWithSource = `${result.answer}\n\n📚 Source: ${result.context.map(doc => doc.metadata.source).join(", ")}`;
+      const responseWithSource = `${result.answer}\n\nSource: ${result.context.map(doc => doc.metadata.source).join(", ")}`;
       
       // Stream the response
       await streamResponse(ws, responseWithSource, sessionId);
@@ -1156,8 +1157,7 @@ async function handleStreamingFallbackLLM(ws, message, sessionId) {
     const recentHistory = getRecentContext(sessionId, 6);
     const conversationHistory = [
       {
-        role: "system",
-        content: "You are AskSFU, a helpful AI assistant for Simon Fraser University. You can discuss SFU-related topics, courses, programs, clubs, and general topics. Use the conversation history to provide contextual responses."
+        content: "You are AskSFU, a friendly, knowledgeable, and empathetic academic advisor at Simon Fraser University (SFU). Your goal is to guide students with a warm and supportive tone, offering accurate and clear advice.\nDO NOT use markdown formatting like **bold** or *italic*, and DO NOT use any HTML tags. Format your responses with simple plain text and standard newlines. Use the conversation history to provide contextual responses."
       }
     ];
     
@@ -1216,8 +1216,7 @@ async function handleWebSearch(ws, message, sessionId) {
       model: "gpt-3.5-turbo",
       messages: [
         {
-          role: "system",
-          content: "You are AskSFU, the AI assistant for Simon Fraser University. Provide helpful information about SFU-related topics including courses, programs, clubs, campus life, and general university information."
+          content: "You are AskSFU, a friendly, knowledgeable, and empathetic academic advisor at Simon Fraser University (SFU). Your goal is to guide students with a warm and supportive tone, offering accurate and clear advice.\nDO NOT use markdown formatting like **bold** or *italic*, and DO NOT use any HTML tags. Format your responses with simple plain text and standard newlines. Provide helpful information about SFU-related topics including courses, programs, clubs, campus life, and general university information."
         },
         {
           role: "user",
@@ -1264,8 +1263,7 @@ async function handleWebSearchHTTP(message, res, sessionId) {
       model: "gpt-3.5-turbo",
       messages: [
         {
-          role: "system",
-          content: "You are AskSFU, the AI assistant for Simon Fraser University. Provide helpful information about SFU-related topics including courses, programs, clubs, campus life, and general university information."
+          content: "You are AskSFU, a friendly, knowledgeable, and empathetic academic advisor at Simon Fraser University (SFU). Your goal is to guide students with a warm and supportive tone, offering accurate and clear advice.\nDO NOT use markdown formatting like **bold** or *italic*, and DO NOT use any HTML tags. Format your responses with simple plain text and standard newlines. Provide helpful information about SFU-related topics including courses, programs, clubs, campus life, and general university information."
         },
         {
           role: "user",
@@ -1352,16 +1350,16 @@ async function getWeatherData() {
     const humidity = weather.main.humidity;
     const windSpeed = weather.wind.speed;
     
-    return `🌤️ **Current Weather at SFU Campus (Burnaby):**\n\n` +
-           `**Temperature:** ${temp}°C\n` +
-           `**Conditions:** ${description}\n` +
-           `**Humidity:** ${humidity}%\n` +
-           `**Wind Speed:** ${windSpeed} m/s\n\n` +
-           `*Data provided by OpenWeatherMap*`;
+    return `Current Weather at SFU Campus (Burnaby):\n\n` +
+           `Temperature: ${temp}°C\n` +
+           `Conditions: ${description}\n` +
+           `Humidity: ${humidity}%\n` +
+           `Wind Speed: ${windSpeed} m/s\n\n` +
+           `Data provided by OpenWeatherMap`;
            
   } catch (error) {
     console.error('Weather API error:', error);
-    return `🌤️ **SFU Campus Weather:**\n\nI'm having trouble fetching current weather data. Please check the weather app or visit [Environment Canada](https://weather.gc.ca/) for current conditions in Burnaby, BC.`;
+    return `SFU Campus Weather:\n\nI'm having trouble fetching current weather data. Please check the weather app or visit https://weather.gc.ca/ for current conditions in Burnaby, BC.`;
   }
 }
 
@@ -1375,20 +1373,20 @@ async function getNewsData() {
     const response = await axios.get(`https://newsapi.org/v2/everything?q=Simon+Fraser+University+OR+SFU&apiKey=${API_KEY}&sortBy=publishedAt&pageSize=5`);
     
     const articles = response.data.articles;
-    let newsText = `📰 **Latest SFU News & Announcements:**\n\n`;
+    let newsText = `Latest SFU News & Announcements:\n\n`;
     
     articles.slice(0, 3).forEach((article, index) => {
-      newsText += `${index + 1}. **${article.title}**\n`;
+      newsText += `${index + 1}. ${article.title}\n`;
       newsText += `   ${article.description}\n`;
-      newsText += `   [Read more](${article.url})\n\n`;
+      newsText += `   Link: ${article.url}\n\n`;
     });
     
-    newsText += `*Data provided by NewsAPI*`;
+    newsText += `Data provided by NewsAPI`;
     return newsText;
     
   } catch (error) {
     console.error('News API error:', error);
-    return `📰 **SFU News:**\n\nI'm having trouble fetching the latest news. Please visit [SFU News](https://www.sfu.ca/news.html) for the most recent announcements and updates.`;
+    return `SFU News:\n\nI'm having trouble fetching the latest news. Please visit https://www.sfu.ca/news.html for the most recent announcements and updates.`;
   }
 }
 
@@ -1410,9 +1408,9 @@ async function getCurrentTime() {
   
   const vancouverTime = now.toLocaleString('en-US', options);
   
-  return `🕐 **Current Time at SFU Campus:**\n\n` +
-         `**${vancouverTime}** (Pacific Time)\n\n` +
-         `*This is the current local time in Vancouver, BC where SFU is located.*`;
+  return `Current Time at SFU Campus:\n\n` +
+         `${vancouverTime} (Pacific Time)\n\n` +
+         `This is the current local time in Vancouver, BC where SFU is located.`;
 }
 
 /**
@@ -1422,14 +1420,14 @@ async function getCourseSchedule() {
   try {
     // This would typically connect to SFU's course schedule API
     // For now, we'll provide general information
-    return `📅 **SFU Course Schedule Information:**\n\n` +
-           `**Current Term:** Fall 2025\n` +
-           `**Registration Period:** Check [SFU Student Services](https://www.sfu.ca/students.html) for current registration dates\n` +
-           `**Class Schedule:** Visit [SFU Course Outlines](https://www.sfu.ca/outlines.html) for detailed class times\n\n` +
-           `*For real-time schedule updates, please check your student portal or the official SFU website.*`;
+    return `SFU Course Schedule Information:\n\n` +
+           `Current Term: Fall 2025\n` +
+           `Registration Period: Check SFU Student Services (https://www.sfu.ca/students.html) for current registration dates\n` +
+           `Class Schedule: Visit SFU Course Outlines (https://www.sfu.ca/outlines.html) for detailed class times\n\n` +
+           `For real-time schedule updates, please check your student portal or the official SFU website.`;
            
   } catch (error) {
-    return `📅 **Course Schedule:**\n\nPlease visit [SFU Course Outlines](https://www.sfu.ca/outlines.html) for the most current class schedules and times.`;
+    return `Course Schedule:\n\nPlease visit https://www.sfu.ca/outlines.html for the most current class schedules and times.`;
   }
 }
 
@@ -1439,21 +1437,21 @@ async function getCourseSchedule() {
 async function getLibraryHours() {
   try {
     // This would typically connect to SFU Library's API
-    return `📚 **SFU Library Hours:**\n\n` +
-           `**Bennett Library (Burnaby):**\n` +
+    return `SFU Library Hours:\n\n` +
+           `Bennett Library (Burnaby):\n` +
            `• Monday-Thursday: 8:00 AM - 10:00 PM\n` +
            `• Friday: 8:00 AM - 6:00 PM\n` +
            `• Saturday: 10:00 AM - 6:00 PM\n` +
            `• Sunday: 12:00 PM - 8:00 PM\n\n` +
-           `**Fraser Library (Surrey):**\n` +
+           `Fraser Library (Surrey):\n` +
            `• Monday-Thursday: 8:00 AM - 10:00 PM\n` +
            `• Friday: 8:00 AM - 6:00 PM\n` +
            `• Saturday: 10:00 AM - 6:00 PM\n` +
            `• Sunday: 12:00 PM - 8:00 PM\n\n` +
-           `*Hours may vary during holidays and exam periods. Check [SFU Library](https://www.lib.sfu.ca/) for updates.*`;
+           `Hours may vary during holidays and exam periods. Check https://www.lib.sfu.ca/ for updates.`;
            
   } catch (error) {
-    return `📚 **Library Hours:**\n\nPlease visit [SFU Library](https://www.lib.sfu.ca/) for the most current library hours and services.`;
+    return `Library Hours:\n\nPlease visit https://www.lib.sfu.ca/ for the most current library hours and services.`;
   }
 }
 
@@ -1463,19 +1461,19 @@ async function getLibraryHours() {
 async function getCampusEvents() {
   try {
     // This would typically connect to SFU Events API
-    return `🎉 **Upcoming SFU Campus Events:**\n\n` +
-           `**This Week:**\n` +
+    return `Upcoming SFU Campus Events:\n\n` +
+           `This Week:\n` +
            `• Student Orientation Events\n` +
            `• Career Fair 2025\n` +
            `• Research Symposium\n\n` +
-           `**Ongoing:**\n` +
+           `Ongoing:\n` +
            `• Fitness Classes at the Recreation Centre\n` +
            `• Study Groups in the Library\n` +
            `• Cultural Events at the Student Union\n\n` +
-           `*For the most current events, visit [SFU Events](https://www.sfu.ca/events.html) or check the SFU Student Union calendar.*`;
+           `For the most current events, visit https://www.sfu.ca/events.html or check the SFU Student Union calendar.`;
            
   } catch (error) {
-    return `🎉 **Campus Events:**\n\nPlease visit [SFU Events](https://www.sfu.ca/events.html) for the most current campus activities and events.`;
+    return `Campus Events:\n\nPlease visit https://www.sfu.ca/events.html for the most current campus activities and events.`;
   }
 }
 
@@ -1662,16 +1660,22 @@ function formatCourseOutline(data, url) {
   } catch (error) {
     outlineUrl = "URL generation failed - invalid course data format";
   }
-  return `${data.info.title} (${data.info.name})<br><br>
-<strong>Term:</strong> ${data.info.term}<br>
-<strong>Campus:</strong> ${data.courseSchedule?.[0]?.campus || "Not available"}<br>
-<strong>Instructor:</strong> ${data.instructor?.[0]?.name || "Not available"}<br>
-<strong>Description:</strong> ${data.info.description}<br><br>
-<strong>Prerequisites:</strong> ${data.info.prerequisites || "None listed"}<br><br>
-<strong>Grading Notes:</strong> ${data.info.gradingNotes || "Not specified"}<br><br>
-<strong>Required Texts:</strong> ${data.requiredText?.map(t => t.details).join("<br>") || "None listed"}<br><br>
-<strong>Schedule:</strong> ${data.courseSchedule?.map(s => `${s.days}: ${s.startTime} - ${s.endTime}`).join("<br>") || "Not available"}<br><br>
-<a href="${outlineUrl}" target="_blank">Here is the provided link for the course outline for further info</a>`;
+  return `${data.info.title} (${data.info.name})
+
+Term: ${data.info.term}
+Campus: ${data.courseSchedule?.[0]?.campus || "Not available"}
+Instructor: ${data.instructor?.[0]?.name || "Not available"}
+Description: ${data.info.description}
+
+Prerequisites: ${data.info.prerequisites || "None listed"}
+
+Grading Notes: ${data.info.gradingNotes || "Not specified"}
+
+Required Texts: ${data.requiredText?.map(t => t.details).join("\n") || "None listed"}
+
+Schedule: ${data.courseSchedule?.map(s => `${s.days}: ${s.startTime} - ${s.endTime}`).join("\n") || "Not available"}
+
+Link: ${outlineUrl}`;
 }
 
 /**
@@ -1719,12 +1723,12 @@ function truncateText(text, maxChars, sourceUrl) {
   if (lastPeriod !== -1) {
     return (
       truncated.substring(0, lastPeriod + 1) +
-      `<br>...<br>For full details, please click <a href="${sourceUrl}" target="_blank">here</a>.`
+      `\n...\nFor full details, please visit: ${sourceUrl}`
     );
   }
   return (
     truncated +
-    `<br>...<br>For full details, please click <a href="${sourceUrl}" target="_blank">here</a>.`
+    `\n...\nFor full details, please visit: ${sourceUrl}`
   );
 }
 
@@ -1733,11 +1737,41 @@ function truncateText(text, maxChars, sourceUrl) {
  */
 app.post("/chat", async (req, res) => {
   try {
-    const { message, sessionId = "default" } = req.body;
+    const { message, sessionId = "default", image } = req.body;
     console.log(`User Message: ${message} (Session: ${sessionId})`);
     
     // Add user message to history
     addToHistory(sessionId, "user", message);
+
+    if (image) {
+      console.log("Image received, processing with OpenAI vision...");
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "You are AskSFU, a friendly, knowledgeable, and empathetic academic advisor at Simon Fraser University (SFU). The user has uploaded an image, likely a course schedule. Extract the courses from it, format them clearly, and answer the user's question based on the image.\nDO NOT use markdown formatting like **bold** or *italic*, and DO NOT use any HTML tags. Format your responses with simple plain text and standard newlines."
+            },
+            {
+              role: "user",
+              content: [
+                { type: "text", text: message || "Please process this course schedule and extract the courses." },
+                { type: "image_url", image_url: { url: image } }
+              ]
+            }
+          ],
+          max_tokens: 800
+        });
+        const responseText = completion.choices[0].message.content;
+        addToHistory(sessionId, "assistant", responseText);
+        return res.json({ response: responseText });
+      } catch (err) {
+        console.error("Vision API Error:", err);
+        return res.json({ response: "I had trouble analyzing your image. Please try again." });
+      }
+    }
 
     // Simple greeting check
     const greetings = ["hi", "hello", "hey", "good morning", "good afternoon"];
@@ -1763,13 +1797,13 @@ app.post("/chat", async (req, res) => {
       let response;
       
       if (wantsAllClubs) {
-        const allClubsList = SFU_CLUBS.join("<br>- ");
-        response = `✅ Here is the complete list of all ${SFU_CLUBS.length} clubs at SFU:<br>- ${allClubsList}<br><br>🔗 For more details, visit <a href="https://go.sfss.ca/clubs/list.php" target="_blank">SFU Club List</a>`;
+        const allClubsList = SFU_CLUBS.join("\n- ");
+        response = `Here is the complete list of all ${SFU_CLUBS.length} clubs at SFU:\n- ${allClubsList}\n\nFor more details, visit: https://go.sfss.ca/clubs/list.php`;
       } else if (matched.length > 0) {
         const limit = matched.length > 10 ? 10 : matched.length; // Show up to 10 clubs
-        response = `✅ Here are some SFU clubs related to "${message}":<br>- ${matched.slice(0, limit).join("<br>- ")}<br><br>🔗 Explore more at <a href="https://go.sfss.ca/clubs/list.php" target="_blank">SFU Club List</a>`;
+        response = `Here are some SFU clubs related to "${message}":\n- ${matched.slice(0, limit).join("\n- ")}\n\nExplore more at: https://go.sfss.ca/clubs/list.php`;
       } else {
-        response = `❌ Couldn't find a club match for "${message}".<br><br>🔗 Check all clubs at <a href="https://go.sfss.ca/clubs/list.php" target="_blank">SFU Club List</a>`;
+        response = `Couldn't find a club match for "${message}".\n\nCheck all clubs at: https://go.sfss.ca/clubs/list.php`;
       }
       addToHistory(sessionId, "assistant", response);
       return res.json({ response });
@@ -1795,7 +1829,7 @@ app.post("/chat", async (req, res) => {
           return res.status(404).json({ response });
         }
         const formattedOutline = formatCourseOutline(data, url);
-        const response = formattedOutline.split("\n").join("<br>") || "Course outline not available.";
+        const response = formattedOutline || "Course outline not available.";
         addToHistory(sessionId, "assistant", response);
         return res.json({ response });
       } else {
@@ -1814,8 +1848,8 @@ app.post("/chat", async (req, res) => {
         console.log("No sections available, falling back to GPT.");
         return handleFallbackLLM(message, res, sessionId);
       }
-      const sectionList = sections.map(sec => `${sec.text} - ${sec.title}`).join("<br>");
-      const response = `Here are the available sections for ${department} ${courseNumber} (${term} ${year}):<br>${sectionList}<br><br>Please type the section code (e.g., D100) to get the course outline.`;
+      const sectionList = sections.map(sec => `${sec.text} - ${sec.title}`).join("\n");
+      const response = `Here are the available sections for ${department} ${courseNumber} (${term} ${year}):\n${sectionList}\n\nPlease type the section code (e.g., D100) to get the course outline.`;
       addToHistory(sessionId, "assistant", response);
       return res.json({ response });
     }
@@ -1852,11 +1886,12 @@ app.post("/chat", async (req, res) => {
     const context = relevantDocs.map(doc => doc.pageContent).join("\n\n");
 
     const promptTemplate = ChatPromptTemplate.fromTemplate(
-      `You are a chat bot called AskSfu.
-When listing multiple points, please separate each point with a <br> tag.
+      `You are AskSFU, a friendly, knowledgeable, and empathetic academic advisor at Simon Fraser University (SFU). Your goal is to guide students with a warm and supportive tone, offering accurate and clear advice.
+DO NOT use markdown formatting like **bold** or *italic*, and DO NOT use any HTML tags. Format your responses with simple plain text and standard newlines.
 When providing information about faculty members, only provide text-based information such as contact details, office locations, titles, and research interests. Do not mention, describe, or reference any photos or images.
-Answer the question based only on the following context:<br>
-{context}<br>
+Answer the question based only on the following context:
+{context}
+
 Question: {input}`
     );
 
@@ -1906,7 +1941,7 @@ Question: {input}`
     if (finalAnswer.length > MAX_CHARS) {
       finalAnswer = truncateText(finalAnswer, MAX_CHARS, sourceUrl);
     }
-    finalAnswer = finalAnswer.split("\n").join("<br>");
+    // finalAnswer formatting updated to keep \n
 
 
 
@@ -1915,7 +1950,7 @@ Question: {input}`
       sourceUrl !== "Source not available" &&
       finalAnswer.toLowerCase() !== "hello! how can i assist you today?"
     ) {
-      responseWithSource += `<br><br>Source: <a href="${sourceUrl}" target="_blank">${sourceUrl}</a>`;
+      responseWithSource += `\n\nSource: ${sourceUrl}`;
     }
     
     // Add response to chat history
@@ -1948,7 +1983,7 @@ async function handleFallbackLLM(message, res, sessionId = "default") {
     const conversationHistory = [
       {
         role: "system",
-        content: "You are AskSFU, a helpful AI assistant for Simon Fraser University. You can discuss SFU-related topics, courses, programs, clubs, and general topics. Use the conversation history to provide contextual responses."
+        content: "You are AskSFU, a friendly, knowledgeable, and empathetic academic advisor at Simon Fraser University (SFU). Your goal is to guide students with a warm and supportive tone, offering accurate and clear advice.\nDO NOT use markdown formatting like **bold** or *italic*, and DO NOT use any HTML tags. Format your responses with simple plain text and standard newlines. Use the conversation history to provide contextual responses."
       }
     ];
     
@@ -1968,7 +2003,7 @@ async function handleFallbackLLM(message, res, sessionId = "default") {
     
     const fallbackResponse = await fallbackLLM.call(conversationHistory);
     let answer = fallbackResponse.text || "I'm sorry, I couldn't generate an answer at this time.";
-    answer = answer.split("\n").join("<br>");
+    // answer formatting updated to keep \n
     
     // Add response to chat history
     addToHistory(sessionId, "assistant", answer);
