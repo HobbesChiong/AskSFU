@@ -373,14 +373,7 @@ function UploadSheet({
           />
         </View>
 
-        {/* Start Advisor Analysis button */}
-        <TouchableOpacity
-          style={styles.sheetCta}
-          onPress={() => { console.log('Start Advisor Analysis pressed'); onClose(); }}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.sheetCtaText}>⊞  Start Advisor Analysis</Text>
-        </TouchableOpacity>
+
       </Animated.View>
     </Modal>
   );
@@ -708,9 +701,4 @@ const styles = StyleSheet.create({
   sheetToggleTitle: { fontSize: 14, fontWeight: '600', color: '#1a1a1a' },
   sheetToggleSub: { fontSize: 10, color: '#aaa', letterSpacing: 0.5, marginTop: 2 },
 
-  sheetCta: {
-    backgroundColor: SFU_RED, borderRadius: 14,
-    paddingVertical: 16, alignItems: 'center',
-  },
-  sheetCtaText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
 });
