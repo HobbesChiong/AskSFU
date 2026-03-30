@@ -10,6 +10,8 @@ To run this application locally, you'll need to run both the Node.js backend ser
 - Node.js (v18+)
 - npm or yarn
 - An OpenAI API Key
+- Android Studio, Xcode (Mac Only), or Expo Go (Physical Device)
+   - Expo Setup Documentation: https://docs.expo.dev/get-started/set-up-your-environment/
 
 ---
 
@@ -46,23 +48,18 @@ The backend handles the AI routing, web scraping, vector similarity searches, an
 ## 2. Running the Frontend 📱
 
 The frontend is built using React Native and Expo. You'll need a separate terminal window to run it alongside your backend.
-
-1. **Open a new terminal and navigate to the project root directory (`my-app`):**
-   ```bash
-   cd my-app
-   ```
-
-2. **Install dependencies:**
+**Make sure to do Expo Setup in Prerequisites first** as you will need this to run the application on either a emulator or a physical device.
+1. **Open a new terminal and navigate to the project root directory and install dependencies:**
    ```bash
    npm install
    ```
 
-3. **Start the Expo Bundler:**
+2. **Start the Expo Bundler:**
    ```bash
    npx expo start
    ```
 
-4. **Launch the App:**
+3. **Launch the App:**
    - **iOS Simulator:** Press `i` in the terminal.
    - **Android Emulator:** Press `a` in the terminal.
    - **Physical Device:** Download the "Expo Go" app on your phone and scan the QR code displayed in your terminal.
