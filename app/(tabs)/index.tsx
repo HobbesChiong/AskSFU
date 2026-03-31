@@ -139,6 +139,18 @@ export default function HomeScreen() {
           </Text>
         </View>
 
+        {/* Chatbot — wide dark card */}
+        <WideCard
+          title="SFU AI Chat helper"
+          subtitle="Your intelligent university companion"
+          icon="💬"
+          bgColor="#1E1E1E"
+          iconBg={SFU_RED}
+          textColor="#fff"
+          subtitleColor="rgba(255,255,255,0.55)"
+          onPress={handleChatbot}
+        />
+
         {/* Top row: 2 square cards */}
         <View style={styles.row}>
           <FeatureCard
@@ -170,18 +182,6 @@ export default function HomeScreen() {
           textColor="#1a1a1a"
           subtitleColor="#666"
           onPress={handleMap}
-        />
-
-        {/* Chatbot — wide dark card */}
-        <WideCard
-          title="SFU AI Chatbot"
-          subtitle="Your intelligent university companion"
-          icon="💬"
-          bgColor="#1E1E1E"
-          iconBg={SFU_RED}
-          textColor="#fff"
-          subtitleColor="rgba(255,255,255,0.55)"
-          onPress={handleChatbot}
         />
       </ScrollView>
     </View>
